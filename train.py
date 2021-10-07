@@ -16,8 +16,8 @@ from utils.dice_score import dice_loss
 from evaluate import evaluate
 from unet import UNet
 
-dir_img = Path('./data/imgs/')
-dir_mask = Path('./data/masks/')
+dir_img = Path('../../learning/unet/img/')
+dir_mask = Path('../../learning/unet/mask/')
 dir_checkpoint = Path('./checkpoints/')
 
 
@@ -90,6 +90,30 @@ def train_net(net,
 
                 with torch.cuda.amp.autocast(enabled=amp):
                     masks_pred = net(images)
+
+                    # print(masks_pred.shape)
+                    # print(true_masks.shape)
+                    # import matplotlib.pyplot as plt
+                    # from mpl_toolkits.axes_grid1 import make_axes_locatable
+                    # fig, ax = plt.subplots(1, 4)
+                    # ax[0].imshow(batch['image'][0, 0, :, :])
+                    # ax[0].set_title('Input image')
+                    # ax[1].imshow(batch['mask'][0, :, :])
+                    # ax[1].set_title('GT Mask image')
+                    # im2 = ax[2].imshow(masks_pred[0, 0, :, :].cpu().detach().numpy())
+                    # ax[2].set_title('Pred. Empty')
+                    # divider = make_axes_locatable(ax[2])
+                    # cax = divider.append_axes("right", size="5%", pad=0.05)
+                    # plt.colorbar(im2, cax=cax)
+
+                    # im3 = ax[3].imshow(masks_pred[0, 1, :, :].cpu().detach().numpy())
+                    # ax[3].set_title('Pred. Occupied')
+
+                    # divider = make_axes_locatable(ax[3])
+                    # cax = divider.append_axes("right", size="5%", pad=0.05)
+                    # plt.colorbar(im3, cax=cax)
+                    
+                    # plt.show()
                     loss = criterion(masks_pred, true_masks) \
                            + dice_loss(F.softmax(masks_pred, dim=1).float(),
                                        F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
@@ -166,7 +190,7 @@ if __name__ == '__main__':
     # Change here to adapt to your data
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
-    net = UNet(n_channels=3, n_classes=2, bilinear=True)
+    net = UNet(n_channels=1, n_classes=2, bilinear=True)
 
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
